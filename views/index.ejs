@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Acortador de Enlaces</title>
+
+    <style>
+        body {
+            background: #0d1117;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 40px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 32px;
+        }
+
+        .box {
+            background: #161b22;
+            padding: 25px;
+            width: 95%;
+            max-width: 480px;
+            margin: auto;
+            border-radius: 10px;
+            border: 1px solid #30363d;
+        }
+
+        input {
+            width: 90%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+
+        button {
+            background: #238636;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #2ea043;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+            word-break: break-all;
+        }
+
+        a.link-output {
+            color: #2ea8ff;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Acortador de Enlaces</h1>
+
+    <div class="box">
+        <input id="url" type="text" placeholder="Pega tu enlace aquí..." />
+
+        <button onclick="shorten()">Acortar</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function shorten() {
+            const url = document.getElementById("url").value;
+
+            if (!url) {
+                alert("Debes escribir un enlace.");
+                return;
+            }
+
+            const res = await fetch("/create", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ originalUrl: url })
+            });
+
+            const data = await res.json();
+
+            if (data.ok) {
+                document.getElementById("result").innerHTML =
+                    `✔ Enlace acortado:<br><a class="link-output" href="https://${data.shortUrl}" target="_blank">${data.shortUrl}</a>`;
+            } else {
+                document.getElementById("result").innerHTML =
+                    "❌ Error al crear el enlace.";
+            }
+        }
+    </script>
+
+</body>
+</html>
