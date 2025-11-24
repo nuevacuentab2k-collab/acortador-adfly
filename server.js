@@ -1,32 +1,19 @@
 require("dotenv").config();
 const express = require("express");
-const mongoose = require("mongoose");
-const path = require("path");
-const app = express();
-
-// Configurar Express
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
-
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
-
-// Rutas del acortador
+const connectDB = require("./config/db");
 const linkRoutes = require("./routes/linkRoutes");
-app.use("/", linkRoutes);
+const userRoutes = require("./routes/userRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
-// Conectar a MongoDB
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("📌 Conectado a MongoDB"))
-  .catch((err) => console.log("❌ Error en MongoDB:", err));
+const app = express();
+connectDB();
 
-// Rutas
-app.get("/", (req, res) => {
-  res.render("index");
-});
+app.use(express.json());
+app.use(express.static("public"));
 
-// Puerto
+app.use("/api/links", linkRoutes);
+app.use("/api/users", userRoutes);
+app.use("/admin", adminRoutes);
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Servidor funcionando en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));

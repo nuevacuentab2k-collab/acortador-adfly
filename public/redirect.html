@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redirigiendo...</title>
+<style>
+  body { font-family: Arial, sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background: #f5f6fa; margin: 0; }
+  .box { text-align: center; background: #fff; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+  h2 { margin-bottom: 20px; }
+  #count { font-size: 24px; color: #0097e6; margin-bottom: 20px; }
+  button { padding: 10px 20px; background: #44bd32; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h2>Redirigiendo a tu enlace...</h2>
+  <div id="count">15</div>
+  <button id="skipBtn">Saltar anuncio</button>
+  <p>Publicidad simulada (placeholder)</p>
+</div>
+
+<script>
+let count = 15;
+const params = new URLSearchParams(window.location.search);
+const target = params.get("target"); // recibimos target como query
+
+const timer = setInterval(() => {
+  count--;
+  document.getElementById("count").innerText = count;
+  if(count <= 0){
+    clearInterval(timer);
+    window.location.href = target;
+  }
+}, 1000);
+
+document.getElementById("skipBtn").addEventListener("click", () => {
+  window.location.href = target;
+});
+</script>
+</body>
+</html>

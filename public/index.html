@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acortador tipo AdFly</title>
+<style>
+  body { font-family: Arial,sans-serif; background:#f2f2f2; margin:0; }
+  .container { max-width:500px; margin:50px auto; background:#fff; padding:30px; border-radius:12px; box-shadow:0 8px 20px rgba(0,0,0,0.15); text-align:center; }
+  h1 { margin-bottom:20px; color:#333; }
+  input { width:100%; padding:12px; margin-bottom:15px; border-radius:8px; border:1px solid #ccc; font-size:16px; }
+  button { width:100%; padding:12px; border:none; background:#ff6b6b; color:#fff; font-size:18px; border-radius:8px; cursor:pointer; margin-bottom:15px; }
+  button:hover { background:#ff3b3b; }
+  #resultado { background:#f9f9f9; padding:15px; border-radius:8px; word-break:break-all; color:#333; margin-bottom:15px; }
+  #adContainer { display:none; background:#ececec; padding:15px; border-radius:8px; font-size:14px; margin-bottom:10px; }
+  #skipBtn { display:none; margin-top:10px; padding:10px; background:#4caf50; color:#fff; border:none; border-radius:6px; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Acorta tus enlaces</h1>
+  <input id="url" type="text" placeholder="https://ejemplo.com">
+  <button onclick="acortar()">Generar acortador</button>
+
+  <div id="resultado">Aquí aparecerá tu enlace corto</div>
+
+  <!-- Publicidad simulada -->
+  <div id="adContainer">
+    📰 Publicidad: ¡Compra ahora el mejor producto!<br>
+    Se redirigirá automáticamente en <span id="countdown">15</span> segundos
+  </div>
+  <button id="skipBtn" onclick="skipAd()">Saltar anuncio</button>
+</div>
+
+<script>
+let countdown;
+let targetUrl;
+
+async function acortar() {
+  const input = document.getElementById('url').value.trim();
+  const resultado = document.getElementById('resultado');
+
+  if(!input){
+    resultado.innerText = "⚠️ Ingresa una URL válida";
+    return;
+  }
+
+  try {
+    // Llamada a la API
+    const resp = await fetch("/api/shorten", {
+      method:"POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({target:input})
+    });
+
+    const data = await resp.json();
+
+    if(data.error){
+      resultado.innerText = "❌ " + data.error;
+      return;
+    }
+
+    // Guardamos la URL acortada
+    targetUrl = data.shortUrl;
+
+    // Mostramos el contador y publicidad
+    document.getElementById('adContainer').style.display='block';
+    document.getElementById('skipBtn').style.display='none';
+    let seconds = 15;
+    document.getElementById('countdown').innerText = seconds;
+
+    countdown = setInterval(() => {
+      seconds--;
+      document.getElementById('countdown').innerText = seconds;
+      if(seconds <= 0){
+        clearInterval(countdown);
+        window.location.href = targetUrl;
+      }
+    }, 1000);
+
+    // Actualizamos resultado
+    resultado.innerHTML = `✅ Tu enlace corto: <a href="${targetUrl}" target="_blank">${targetUrl}</a>`;
+
+  } catch(err){
+    resultado.innerText = "❌ Error creando el enlace";
+    console.error(err);
+  }
+}
+
+function skipAd(){
+  clearInterval(countdown);
+  window.location.href = targetUrl;
+}
+</script>
+
+</body>
+</html>

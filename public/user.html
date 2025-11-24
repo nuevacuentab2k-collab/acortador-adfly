@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Usuario - Acortador</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f5f6fa; margin: 0; }
+  header { background: #2f3640; color: #fff; padding: 20px; text-align: center; }
+  h1 { margin: 0; }
+  .container { max-width: 1000px; margin: 30px auto; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+  #newLink { display: flex; margin-bottom: 20px; }
+  #target { flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; }
+  button { padding: 10px; background: #0097e6; color: #fff; border: none; border-radius: 6px; cursor: pointer; margin-left: 10px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th, td { padding: 12px; border-bottom: 1px solid #dcdde1; text-align: left; font-size: 14px; }
+  th { background: #f1f2f6; }
+  a { color: #0097e6; text-decoration: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Panel de Usuario</h1>
+</header>
+<div class="container">
+  <div id="newLink">
+    <input type="url" id="target" placeholder="Ingresa la URL que quieres acortar">
+    <button onclick="createLink()">Acortar</button>
+    <button onclick="logout()">Cerrar Sesión</button>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Código</th>
+        <th>URL Original</th>
+        <th>Enlace Corto</th>
+        <th>Clics</th>
+        <th>Creado</th>
+      </tr>
+    </thead>
+    <tbody id="linksTable"></tbody>
+  </table>
+</div>
+
+<script>
+const token = localStorage.getItem("token");
+if(!token) window.location.href = "login.html";
+
+async function fetchLinks(){
+  try {
+    const res = await fetch("/api/links", { headers: { "Authorization": "Bearer " + token }});
+    const data = await res.json();
+    const tbody = document.getElementById("linksTable");
+    tbody.innerHTML = "";
+    data.forEach(link => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${link.code}</td>
+        <td><a href="${link.target}" target="_blank">${link.target}</a></td>
+        <td><a href="${link.shortUrl}" target="_blank">${link.shortUrl}</a></td>
+        <td>${link.clicks}</td>
+        <td>${new Date(link.createdAt).toLocaleString()}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch(err){ console.error(err); }
+}
+
+async function createLink(){
+  const target = document.getElementById("target").value;
+  if(!target) return alert("Ingresa una URL");
+
+  try {
+    const res = await fetch("/api/links/shorten", {
+      method: "POST",
+      headers: {
+        "Content-Type":"application/json",
+        "Authorization": "Bearer " + token
+      },
+      body: JSON.stringify({ target })
+    });
+    const data = await res.json();
+    if(data.error) return alert(data.error);
+    document.getElementById("target").value = "";
+    fetchLinks();
+  } catch(err){ console.error(err); }
+}
+
+function logout(){
+  localStorage.removeItem("token");
+  window.location.href = "login.html";
+}
+
+// Inicializar
+fetchLinks();
+</script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro - Acortador</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f5f6fa; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+  .container { background: #fff; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 300px; }
+  h1 { text-align: center; color: #2f3640; }
+  input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; }
+  button { width: 100%; padding: 10px; background: #44bd32; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; }
+  p { text-align: center; font-size: 14px; }
+  a { color: #0097e6; text-decoration: none; }
+  .error { color: #c23616; font-size: 14px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Registro</h1>
+  <div class="error" id="error"></div>
+  <input type="text" id="username" placeholder="Usuario">
+  <input type="email" id="email" placeholder="Correo electrónico">
+  <input type="password" id="password" placeholder="Contraseña">
+  <button onclick="register()">Registrarse</button>
+  <p>¿Ya tienes cuenta? <a href="login.html">Ingresa aquí</a></p>
+</div>
+
+<script>
+async function register() {
+  const username = document.getElementById("username").value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const errorDiv = document.getElementById("error");
+
+  try {
+    const res = await fetch("/api/users/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, email, password })
+    });
+    const data = await res.json();
+    if (!data.success) return errorDiv.innerText = data.error;
+
+    alert("Registro exitoso. Ahora inicia sesión.");
+    window.location.href = "login.html";
+  } catch(err) {
+    errorDiv.innerText = "Error del servidor";
+    console.error(err);
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Admin - Acortador</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f5f6fa; margin: 0; }
+  header { background: #2f3640; color: #fff; padding: 20px; text-align: center; }
+  h1 { margin: 0; }
+  .container { max-width: 1200px; margin: 30px auto; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+  .login-box { max-width: 400px; margin: 50px auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+  input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; }
+  button { padding: 10px 20px; background: #0097e6; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  th, td { padding: 12px; border-bottom: 1px solid #dcdde1; text-align: left; font-size: 14px; }
+  th { background: #f1f2f6; }
+  .btn-delete { background: #c23616; color: #fff; border-radius: 4px; padding: 5px 10px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Panel de Administración</h1>
+</header>
+
+<div class="container" id="adminPanel" style="display:none;">
+  <h2>Enlaces Acortados</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Código</th>
+        <th>URL Original</th>
+        <th>Enlace Corto</th>
+        <th>Clics</th>
+        <th>Creado</th>
+        <th>Último Acceso</th>
+        <th>Usuario</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody id="linksTable"></tbody>
+  </table>
+</div>
+
+<div class="login-box" id="loginBox">
+  <h2>Login Admin</h2>
+  <input type="text" id="adminUser" placeholder="Usuario">
+  <input type="password" id="adminPass" placeholder="Contraseña">
+  <button onclick="adminLogin()">Ingresar</button>
+  <div id="loginError" style="color:red; margin-top:10px;"></div>
+</div>
+
+<script>
+const BASE_URL = window.location.origin;
+
+async function adminLogin(){
+  const user = document.getElementById("adminUser").value;
+  const pass = document.getElementById("adminPass").value;
+  const errorDiv = document.getElementById("loginError");
+
+  // Comprobar con ADMIN_SECRET y usuario de .env
+  try {
+    const res = await fetch("/admin/auth", {
+      method: "POST",
+      headers: { "Content-Type":"application/json" },
+      body: JSON.stringify({ username: user, password: pass })
+    });
+    const data = await res.json();
+    if(!data.success) return errorDiv.innerText = data.error;
+
+    localStorage.setItem("adminToken", data.token);
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("adminPanel").style.display = "block";
+    fetchLinks();
+  } catch(err){ console.error(err); errorDiv.innerText = "Error de servidor"; }
+}
+
+// Función para obtener todos los enlaces
+async function fetchLinks(){
+  const token = localStorage.getItem("adminToken");
+  try {
+    const res = await fetch("/admin/links", {
+      headers: { "Authorization":"Bearer " + token }
+    });
+    const data = await res.json();
+    const tbody = document.getElementById("linksTable");
+    tbody.innerHTML = "";
+    data.forEach(link => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${link._id}</td>
+        <td>${link.code}</td>
+        <td><a href="${link.target}" target="_blank">${link.target}</a></td>
+        <td><a href="${BASE_URL}/${link.code}" target="_blank">${BASE_URL}/${link.code}</a></td>
+        <td>${link.clicks}</td>
+        <td>${new Date(link.createdAt).toLocaleString()}</td>
+        <td>${link.lastAccess ? new Date(link.lastAccess).toLocaleString() : "-"}</td>
+        <td>${link.userId || "Anonimo"}</td>
+        <td><button class="btn-delete" onclick="deleteLink('${link._id}')">Borrar</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch(err){ console.error(err); }
+}
+
+// Borrar enlace
+async function deleteLink(id){
+  if(!confirm("¿Eliminar este enlace?")) return;
+  const token = localStorage.getItem("adminToken");
+  try {
+    const res = await fetch("/admin/links/"+id, {
+      method: "DELETE",
+      headers: { "Authorization":"Bearer "+token }
+    });
+    const data = await res.json();
+    if(data.success) fetchLinks();
+  } catch(err){ console.error(err); }
+}
+</script>
+</body>
+</html>

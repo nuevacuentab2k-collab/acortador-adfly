@@ -1,16 +1,16 @@
 const express = require("express");
+const { shortenLink, redirectIntermediate } = require("../controllers/linkController");
+const auth = require("../middleware/auth");
+
 const router = express.Router();
-const linkController = require("../controllers/linkController");
 
-// Página principal (formulario)
-router.get("/", (req, res) => {
-  res.render("index");
-});
+// Crear enlace
+router.post("/shorten", auth, shortenLink);
 
-// Crear enlace corto
-router.post("/create", linkController.createShortLink);
+// Redirección intermedia
+router.get("/r/:code", redirectIntermediate);
 
-// Redirigir a enlace original
-router.get("/:code", linkController.redirect);
+// Redirección directa (para compatibilidad)
+router.get("/:code", redirectIntermediate);
 
 module.exports = router;
