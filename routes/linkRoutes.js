@@ -1,16 +1,16 @@
 const express = require("express");
-const { shortenLink, redirectIntermediate } = require("../controllers/linkController");
+const router = express.Router();
+const linkController = require("../controllers/linkController");
 const auth = require("../middleware/auth");
 
-const router = express.Router();
+// Crear enlace (protegido por JWT si quieres que solo usuarios registrados creen)
+// Si quieres permitir invitados: quita `auth` y ajusta.
+router.post("/shorten", auth, linkController.shortenLink);
 
-// Crear enlace
-router.post("/shorten", auth, shortenLink);
+// Info del link (útil para admin/user frontend)
+router.get("/info/:code", linkController.info);
 
-// Redirección intermedia
-router.get("/r/:code", redirectIntermediate);
-
-// Redirección directa (para compatibilidad)
-router.get("/:code", redirectIntermediate);
+// Redirección intermedia (ruta pública)
+router.get("/r/:code", linkController.redirectIntermediate);
 
 module.exports = router;

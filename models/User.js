@@ -9,7 +9,6 @@ const userSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-// Validar contraseña
 userSchema.methods.validatePassword = function(password) {
   return bcrypt.compare(password, this.passwordHash);
 };
